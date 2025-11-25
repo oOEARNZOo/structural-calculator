@@ -1,0 +1,336 @@
+/* =========================
+   Reset & Base Styles
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* 🎨 Color Palette แบบ CalcForge */
+    --primary: #2563eb;       /* น้ำเงินมาตรฐาน (Royal Blue) */
+    --primary-dark: #1e40af;  /* น้ำเงินเข้มเวลากด */
+    --secondary: #475569;     /* สีเทาเข้มสำหรับปุ่มรอง */
+    
+    /* Text Colors (เน้นอ่านง่าย) */
+    --text-primary: #0f172a;  /* ดำเกือบสนิท (Slate 900) */
+    --text-secondary: #334155;/* เทาเข้ม (Slate 700) */
+    --text-muted: #64748b;    /* เทากลาง */
+    
+    /* Backgrounds */
+    --bg-body: #f1f5f9;       /* พื้นหลังเทาอ่อนมากๆ (Slate 100) */
+    --bg-card: #ffffff;       /* ขาวจั๊วะ */
+    --bg-header: #1e293b;     /* สีกรมท่าเกือบดำ (Slate 800) */
+    
+    /* Borders */
+    --border-color: #cbd5e1;  /* ขอบสีเทาชัดๆ */
+    --radius-sm: 4px;         /* มุมโค้งน้อยๆ ให้ดูแข็งแรง */
+    --radius-md: 6px;
+    
+    /* Shadows */
+    --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Roboto', sans-serif; /* เปลี่ยนฟอนต์ให้อ่านง่ายแบบ Engineering */
+    line-height: 1.5;
+    color: var(--text-primary);
+    background-color: var(--bg-body);
+    min-height: 100vh;
+}
+
+/* =========================
+   Layout
+========================= */
+.container {
+    max-width: 1000px; /* บีบให้กระชับขึ้น */
+    margin: 0 auto;
+    padding: 0 1rem 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   Header (สไตล์แถบดำคาดบน)
+========================= */
+.header {
+    background-color: var(--bg-header);
+    color: white;
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-bottom: 4px solid var(--primary); /* เส้นสีน้ำเงินตัดขอบล่าง */
+}
+
+.header-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    text-align: left; /* จัดชิดซ้ายแบบเว็บเครื่องมือ */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-content h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.header-content p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin: 0;
+}
+
+/* =========================
+   Main Content & Cards
+========================= */
+.main-content {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color); /* มีขอบชัดเจน */
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-card);
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0; /* เส้นขีดใต้หัวข้อ */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* =========================
+   Forms & Inputs
+========================= */
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.input-group label {
+    font-weight: 600; /* ตัวหนาขึ้นเพื่อให้อ่านง่าย */
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.input-group input,
+.input-group select {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    background-color: #fff;
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); /* เงาสีฟ้าจางๆ */
+}
+
+/* Load Inputs Section */
+.load-inputs {
+    background-color: #f8fafc; /* พื้นหลังเทาจางๆ แยกส่วน Input ย่อย */
+    border: 1px dashed var(--border-color);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-top: 1rem;
+}
+
+/* =========================
+   Buttons
+========================= */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm); /* ปุ่มเหลี่ยมขึ้น */
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #fff;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* =========================
+   Results Area (Table Style)
+========================= */
+.results-content {
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hidden { display: none; }
+
+.placeholder {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Result Box แบบตารางชัดเจน */
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.result-item {
+    padding: 1.25rem;
+    text-align: center;
+    background: #fff;
+}
+
+.result-item:first-child {
+    border-right: 1px solid var(--border-color);
+}
+
+.result-item .label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.result-item .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* =========================
+   Diagram
+========================= */
+.diagram-container {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    overflow-x: auto;
+}
+
+#beamDiagram {
+    background-color: #fff; /* พื้นหลังรูปวาดสีขาวชัดเจน */
+}
+
+/* =========================
+   Theory / Equations
+========================= */
+.theory-content h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.equation {
+    background: #f1f5f9;
+    padding: 1rem;
+    border-left: 4px solid var(--primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-family: monospace;
+    font-size: 0.95rem;
+    color: #334155;
+}
+
+ul {
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+}
+
+li { margin-bottom: 0.25rem; }
+
+/* =========================
+   Footer
+========================= */
+.footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .result-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .result-item:first-child {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+}
