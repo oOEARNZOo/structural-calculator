@@ -1,167 +1,232 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Structural Calculator - Beam Reaction Analysis</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Structural Calculator | Beam Reaction Workspace</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="header-content">
-                <h1>🏗️ Structural Calculator</h1>
-                <p>คำนวณ Reaction ของคานอย่างง่ายและแม่นยำ</p>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark">SC</span>
+                <div>
+                    <h1>Structural Calculator</h1>
+                    <p>Beam reaction analysis workspace</p>
+                </div>
+            </div>
+            <div class="topbar-meta" aria-label="Project metadata">
+                <span>Pin + Roller Solver</span>
+                <span>SVG Free-Body Diagram</span>
             </div>
         </header>
 
-        <main class="main-content">
-            <section class="input-section">
-                <div class="card">
-                    <h2>📐 ข้อมูลคาน</h2>
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label for="beamLength">ความยาวคาน (m)</label>
-                            <input type="number" id="beamLength" placeholder="0.00" step="0.01" min="0.1">
+        <main class="workspace">
+            <aside class="control-panel" aria-label="Calculator controls">
+                <section class="panel-block">
+                    <div class="section-heading">
+                        <span class="section-index">01</span>
+                        <div>
+                            <h2>Beam Setup</h2>
+                            <p>Set beam length, support types, and load case.</p>
                         </div>
-                        <div class="input-group">
-                            <label for="loadType">ประเภทแรง</label>
-                            <select id="loadType">
-                                <option value="point">Point Load (แรงจุด)</option>
-                                <option value="uniform">Uniform Load (แรงกระจายสม่ำเสมอ)</option>
-                                <option value="triangular">Triangular Load (แรงกระจายสามเหลี่ยม)</option>
+                    </div>
+
+                    <div class="field">
+                        <label for="beamLength">Beam length</label>
+                        <div class="unit-field">
+                            <input type="number" id="beamLength" placeholder="5.00" step="0.01" min="0.1" value="5">
+                            <span>m</span>
+                        </div>
+                    </div>
+
+                    <div class="support-grid">
+                        <div class="field">
+                            <label for="supportA">Support A</label>
+                            <select id="supportA" aria-describedby="supportNote">
+                                <option value="pin">Pin Support</option>
+                                <option value="roller">Roller Support</option>
+                                <option value="fixed">Fixed Support (visual only)</option>
                             </select>
+                        </div>
+                        <div class="field">
+                            <label for="supportB">Support B</label>
+                            <select id="supportB" aria-describedby="supportNote">
+                                <option value="roller">Roller Support</option>
+                                <option value="pin">Pin Support</option>
+                                <option value="fixed">Fixed Support (visual only)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p id="supportNote" class="support-note" role="status" aria-live="polite">Solver supports one pin and one roller. Fixed supports are shown for diagram study only.</p>
+
+                    <div class="field">
+                        <label for="loadType">Load case</label>
+                        <select id="loadType">
+                            <option value="point">Point Load</option>
+                            <option value="uniform">Uniform Distributed Load</option>
+                            <option value="triangular">Triangular Load</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="panel-block">
+                    <div class="section-heading">
+                        <span class="section-index">02</span>
+                        <div>
+                            <h2>Load Parameters</h2>
+                            <p>Input load magnitude and position for the selected load case.</p>
                         </div>
                     </div>
 
                     <div id="pointLoadInputs" class="load-inputs">
-                        <div class="input-grid">
-                            <div class="input-group">
-                                <label for="pointLoad">แรง (kN)</label>
-                                <input type="number" id="pointLoad" placeholder="0.00" step="0.01">
+                        <div class="field">
+                            <label for="pointLoad">Point load, P</label>
+                            <div class="unit-field">
+                                <input type="number" id="pointLoad" step="0.01" min="0" value="10">
+                                <span>kN</span>
                             </div>
-                            <div class="input-group">
-                                <label for="pointDistance">ระยะจากจุด A (m)</label>
-                                <input type="number" id="pointDistance" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="field">
+                            <label for="pointDistance">Distance from A, a</label>
+                            <div class="unit-field">
+                                <input type="number" id="pointDistance" step="0.01" min="0" value="2.5">
+                                <span>m</span>
                             </div>
                         </div>
                     </div>
 
-                    <div id="uniformLoadInputs" class="load-inputs" style="display: none;">
-                        <div class="input-grid">
-                            <div class="input-group">
-                                <label for="uniformLoad">แรงต่อหน่วยความยาว (kN/m)</label>
-                                <input type="number" id="uniformLoad" placeholder="0.00" step="0.01">
+                    <div id="uniformLoadInputs" class="load-inputs hidden">
+                        <div class="field">
+                            <label for="uniformLoad">Uniform load, w</label>
+                            <div class="unit-field">
+                                <input type="number" id="uniformLoad" step="0.01" min="0" value="4">
+                                <span>kN/m</span>
                             </div>
                         </div>
                     </div>
 
-                    <div id="triangularLoadInputs" class="load-inputs" style="display: none;">
-                        <div class="input-grid">
-                            <div class="input-group">
-                                <label for="maxLoad">แรงสูงสุด (kN/m)</label>
-                                <input type="number" id="maxLoad" placeholder="0.00" step="0.01">
+                    <div id="triangularLoadInputs" class="load-inputs hidden">
+                        <div class="field">
+                            <label for="maxLoad">Maximum load, wmax</label>
+                            <div class="unit-field">
+                                <input type="number" id="maxLoad" step="0.01" min="0" value="6">
+                                <span>kN/m</span>
                             </div>
-                            <div class="input-group">
-                                <label for="loadStart">จุดเริ่มต้นแรง (m)</label>
-                                <input type="number" id="loadStart" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="field">
+                            <label for="loadStart">Load start</label>
+                            <div class="unit-field">
+                                <input type="number" id="loadStart" step="0.01" min="0" value="0">
+                                <span>m</span>
                             </div>
-                            <div class="input-group">
-                                <label for="loadEnd">จุดสิ้นสุดแรง (m)</label>
-                                <input type="number" id="loadEnd" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="field">
+                            <label for="loadEnd">Load end</label>
+                            <div class="unit-field">
+                                <input type="number" id="loadEnd" step="0.01" min="0" value="5">
+                                <span>m</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="button-group">
-                        <button id="calculateBtn" class="btn btn-primary">
-                            🧮 คำนวณ
-                        </button>
-                        <button id="resetBtn" class="btn btn-secondary">
-                            🔄 ล้างค่า
-                        </button>
-                    </div>
-                </div>
-            </section>
+                    <p id="validationMessage" class="validation-message" role="status" aria-live="polite">Inputs are ready for calculation.</p>
 
-            <section class="results-section">
-                <div class="card">
-                    <h2>📊 ผลการคำนวณ</h2>
-                    <div id="results" class="results-content">
-                        <div class="placeholder">
-                            <div class="placeholder-icon">📐</div>
-                            <p>กรอกข้อมูลและกดคำนวณเพื่อดูผลลัพธ์</p>
-                        </div>
-                        <div id="calculationResult" class="hidden">
-                            <div class="result-grid">
-                                <div class="result-item">
-                                    <span class="label">Reaction A (RA)</span>
-                                    <span class="value" id="reactionA">0.00 kN</span>
-                                </div>
-                                <div class="result-item">
-                                    <span class="label">Reaction B (RB)</span>
-                                    <span class="value" id="reactionB">0.00 kN</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="actions">
+                        <button id="calculateBtn" class="button primary" type="button" aria-describedby="validationMessage supportNote">Calculate</button>
+                        <button id="exampleBtn" class="button secondary" type="button">Load example</button>
+                        <button id="resetBtn" class="button secondary" type="button">Reset</button>
                     </div>
-                </div>
-            </section>
+                </section>
+            </aside>
 
-            <section class="diagram-section">
-                <div class="card">
-                    <h2>📏 แผนภาพคาน</h2>
-                    <div class="diagram-container">
-                        <svg id="beamDiagram" viewBox="0 0 800 300">
+            <section class="analysis-panel" aria-label="Beam analysis workspace">
+                <div class="canvas-card">
+                    <div class="canvas-header">
+                        <div>
+                            <p class="eyeline">Beam Diagram</p>
+                            <h2>Free-body diagram</h2>
+                        </div>
+                        <div class="status-pill" id="diagramStatus" role="status" aria-live="polite">Preview</div>
+                    </div>
+
+                    <div class="diagram-frame">
+                        <svg id="beamDiagram" viewBox="0 0 900 360" role="img" aria-labelledby="diagramTitle diagramDesc">
+                            <title id="diagramTitle">Beam free-body diagram</title>
+                            <desc id="diagramDesc">Preview of a simply supported beam with a point load example.</desc>
                             <defs>
-                                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+                                <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                                    <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--line-soft)" stroke-width="0.7"/>
                                 </pattern>
+                                <marker id="arrow-down" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--load)"/>
+                                </marker>
+                                <marker id="arrow-up" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                                    <path d="M 0 5 L 10 0 L 10 10 z" fill="var(--reaction)"/>
+                                </marker>
                             </defs>
-                            <rect width="100%" height="100%" fill="url(#grid)"/>
-                            
-                            <rect id="beam" x="50" y="200" width="700" height="20" fill="#6366f1" stroke="#4f46e5" stroke-width="2"/>
-                            
-                            <g id="supports">
-                                <rect x="50" y="200" width="20" height="30" fill="#ef4444"/>
-                                <rect x="730" y="200" width="20" height="30" fill="#ef4444"/>
-                                <text x="60" y="250" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="bold">A</text>
-                                <text x="740" y="250" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="bold">B</text>
-                            </g>
-                            
+                            <rect width="900" height="360" fill="url(#grid)"/>
+                            <line x1="90" y1="220" x2="810" y2="220" stroke="var(--beam)" stroke-width="14" stroke-linecap="square"/>
+                            <line x1="90" y1="210" x2="810" y2="210" stroke="var(--beam-highlight)" stroke-width="2"/>
+                            <g id="supports"></g>
                             <g id="loads"></g>
-                            
                             <g id="dimensions"></g>
                         </svg>
                     </div>
                 </div>
-            </section>
 
-            <section class="theory-section">
-                <div class="card">
-                    <h2>📚 ทฤษฎีการคำนวณ</h2>
-                    <div class="theory-content">
-                        <h3>สมการสมดุล</h3>
-                        <div class="equation">
-                            <p><strong>ΣFy = 0:</strong> RA + RB = Total Load</p>
-                            <p><strong>ΣMA = 0:</strong> RB × L = Σ(Moment about A)</p>
+                <div class="insight-grid">
+                    <section class="result-card">
+                        <div class="card-title">
+                            <p class="eyeline">Result</p>
+                            <h2>Support reactions</h2>
                         </div>
+                        <div id="results" class="results-content" aria-live="polite">
+                            <div class="placeholder">
+                                <span class="placeholder-mark">RA</span>
+                                <p>Example values are loaded. Press Calculate to solve RA and RB.</p>
+                            </div>
+                            <div id="calculationResult" class="hidden">
+                                <div class="result-grid">
+                                    <div class="result-item">
+                                        <span class="label">Reaction A</span>
+                                        <span class="value" id="reactionA">0.00 kN</span>
+                                    </div>
+                                    <div class="result-item">
+                                        <span class="label">Reaction B</span>
+                                        <span class="value" id="reactionB">0.00 kN</span>
+                                    </div>
+                                </div>
+                                <div class="result-meta">
+                                    <span id="totalLoad">Total load: -</span>
+                                    <span id="centroidLocation">Resultant at: -</span>
+                                </div>
+                            </div>
                         </div>
+                    </section>
+
+                    <section class="theory-card">
+                        <div class="card-title">
+                            <p class="eyeline">Calculation Notes</p>
+                            <h2>Equilibrium equations</h2>
+                        </div>
+                        <div class="equation-list">
+                            <p><strong>Sum Fy = 0</strong><span>RA + RB = Total Load</span></p>
+                            <p><strong>Sum MA = 0</strong><span>RB * L = Resultant Load * x_bar</span></p>
+                            <p><strong>Notation</strong><span>P = point load, w = distributed load, x_bar = resultant location from A.</span></p>
+                            <p><strong>Solver limit</strong><span>Calculation supports one pin and one roller. Fixed supports are visual-only in this version.</span></p>
+                        </div>
+                    </section>
                 </div>
             </section>
         </main>
 
         <footer class="footer">
-            <p>สร้างโดย <strong>Chanatip Tonngern</strong> - Civil Engineer & Front-End Developer</p>
-            <p>© 2025 Structural Calculator. สำหรับการศึกษาเท่านั้น</p>
+            <p>Created by <strong>Chanatip Tonngern</strong> for civil engineering and front-end practice.</p>
         </footer>
-
-        
     </div>
 
     <script src="type.js"></script>
-    
 </body>
 </html>
-
