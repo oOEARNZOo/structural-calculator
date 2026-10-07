@@ -3,230 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Structural Calculator | Beam Reaction Workspace</title>
+    <meta name="description" content="Explore beam reactions with an interactive free-body diagram and step-by-step equilibrium calculations.">
+    <title>Structural Calculator | Beam Workspace</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script src="solver.js" defer></script>
+    <script src="type.js" defer></script>
 </head>
 <body>
+    <a class="skip-link" href="#beamLength">Skip to beam settings</a>
     <div class="app-shell">
         <header class="topbar">
-            <div class="brand">
-                <span class="brand-mark">SC</span>
-                <div>
-                    <h1>Structural Calculator</h1>
-                    <p>Beam reaction analysis workspace</p>
-                </div>
-            </div>
-            <div class="topbar-meta" aria-label="Project metadata">
-                <span>Pin + Roller Solver</span>
-                <span>SVG Free-Body Diagram</span>
-            </div>
+            <div class="brand"><span class="brand-mark" aria-hidden="true">SC</span><div><h1>Structural Calculator</h1><p>Beam reaction workspace</p></div></div>
+            <div class="toolbar"><button id="saveBtn" class="button secondary" type="button">Save setup</button><button id="exportBtn" class="button primary" type="button">Export diagram</button></div>
         </header>
-
+        <div class="workspace-heading"><div><h2>Explore the balance.</h2><p>Change a load. See how the supports respond.</p></div><span class="live-label"><span aria-hidden="true"></span>Live analysis</span></div>
         <main class="workspace">
-            <aside class="control-panel" aria-label="Calculator controls">
+            <aside class="control-panel" aria-label="Beam settings">
                 <section class="panel-block">
-                    <div class="section-heading">
-                        <span class="section-index">01</span>
-                        <div>
-                            <h2>Beam Setup</h2>
-                            <p>Set beam length, support types, and load case.</p>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label for="beamLength">Beam length</label>
-                        <div class="unit-field">
-                            <input type="number" id="beamLength" placeholder="5.00" step="0.01" min="0.1" value="5">
-                            <span>m</span>
-                        </div>
-                    </div>
-
+                    <div class="section-heading"><h2>Beam setup</h2><span class="panel-caption">Geometry & supports</span></div>
+                    <div class="field"><label for="beamLength">Beam length</label><div class="unit-field"><input type="number" id="beamLength" step="0.01" min="0.01" value="5" aria-describedby="beamLengthError"><span>m</span></div><p class="field-error" id="beamLengthError"></p></div>
                     <div class="support-grid">
-                        <div class="field">
-                            <label for="supportA">Support A</label>
-                            <select id="supportA" aria-describedby="supportNote">
-                                <option value="pin">Pin Support</option>
-                                <option value="roller">Roller Support</option>
-                                <option value="fixed">Fixed Support (visual only)</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label for="supportB">Support B</label>
-                            <select id="supportB" aria-describedby="supportNote">
-                                <option value="roller">Roller Support</option>
-                                <option value="pin">Pin Support</option>
-                                <option value="fixed">Fixed Support (visual only)</option>
-                            </select>
-                        </div>
+                        <div class="field"><label for="supportA">Support A</label><select id="supportA" aria-describedby="supportNote"><option value="pin">Pin</option><option value="roller">Roller</option><option value="fixed">Fixed (preview)</option></select></div>
+                        <div class="field"><label for="supportB">Support B</label><select id="supportB" aria-describedby="supportNote"><option value="roller">Roller</option><option value="pin">Pin</option><option value="fixed">Fixed (preview)</option></select></div>
                     </div>
-                    <p id="supportNote" class="support-note" role="status" aria-live="polite">Solver supports one pin and one roller. Fixed supports are shown for diagram study only.</p>
-
-                    <div class="field">
-                        <label for="loadType">Load case</label>
-                        <select id="loadType">
-                            <option value="point">Point Load</option>
-                            <option value="uniform">Uniform Distributed Load</option>
-                            <option value="triangular">Triangular Load</option>
-                        </select>
-                    </div>
+                    <p id="supportNote" class="support-note">One pin + one roller. Reactions are calculated automatically.</p>
                 </section>
-
                 <section class="panel-block">
-                    <div class="section-heading">
-                        <span class="section-index">02</span>
-                        <div>
-                            <h2>Load Parameters</h2>
-                            <p>Input load magnitude and position for the selected load case.</p>
-                        </div>
-                    </div>
-
+                    <div class="section-heading"><h2>Applied load</h2><span class="panel-caption">Downward force</span></div>
+                    <div class="field"><label for="loadType">Load case</label><select id="loadType"><option value="point">Point load</option><option value="uniform">Uniform distributed load</option><option value="triangular">Triangular load</option></select></div>
                     <div id="pointLoadInputs" class="load-inputs">
-                        <div class="field">
-                            <label for="pointLoad">Point load, P</label>
-                            <div class="unit-field">
-                                <input type="number" id="pointLoad" step="0.01" min="0" value="10">
-                                <span>kN</span>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label for="pointDistance">Distance from A, a</label>
-                            <div class="unit-field">
-                                <input type="number" id="pointDistance" step="0.01" min="0" value="2.5">
-                                <span>m</span>
-                            </div>
-                        </div>
+                        <div class="field"><label for="pointLoad">Magnitude, P</label><div class="unit-field"><input type="number" id="pointLoad" step="0.01" min="0.01" value="10" aria-describedby="pointLoadError"><span>kN</span></div><p class="field-error" id="pointLoadError"></p></div>
+                        <div class="field"><label for="pointDistance">Position from A, a</label><div class="unit-field"><input type="number" id="pointDistance" step="0.01" min="0" value="2.5" aria-describedby="pointDistanceError"><span>m</span></div><p class="field-error" id="pointDistanceError"></p></div>
                     </div>
-
                     <div id="uniformLoadInputs" class="load-inputs hidden">
-                        <div class="field">
-                            <label for="uniformLoad">Uniform load, w</label>
-                            <div class="unit-field">
-                                <input type="number" id="uniformLoad" step="0.01" min="0" value="4">
-                                <span>kN/m</span>
-                            </div>
-                        </div>
+                        <div class="field"><label for="uniformLoad">Intensity, w</label><div class="unit-field"><input type="number" id="uniformLoad" step="0.01" min="0.01" value="4" aria-describedby="uniformLoadError"><span>kN/m</span></div><p class="field-error" id="uniformLoadError"></p></div>
+                        <p class="field-hint">Applied across the full beam length.</p>
                     </div>
-
                     <div id="triangularLoadInputs" class="load-inputs hidden">
-                        <div class="field">
-                            <label for="maxLoad">Maximum load, wmax</label>
-                            <div class="unit-field">
-                                <input type="number" id="maxLoad" step="0.01" min="0" value="6">
-                                <span>kN/m</span>
-                            </div>
+                        <div class="field"><label for="maxLoad">Maximum intensity, wmax</label><div class="unit-field"><input type="number" id="maxLoad" step="0.01" min="0.01" value="6" aria-describedby="maxLoadError"><span>kN/m</span></div><p class="field-error" id="maxLoadError"></p></div>
+                        <div class="support-grid">
+                            <div class="field"><label for="loadStart">Start from A</label><div class="unit-field"><input type="number" id="loadStart" step="0.01" min="0" value="0" aria-describedby="loadStartError"><span>m</span></div><p class="field-error" id="loadStartError"></p></div>
+                            <div class="field"><label for="loadEnd">End from A</label><div class="unit-field"><input type="number" id="loadEnd" step="0.01" min="0" value="5" aria-describedby="loadEndError"><span>m</span></div><p class="field-error" id="loadEndError"></p></div>
                         </div>
-                        <div class="field">
-                            <label for="loadStart">Load start</label>
-                            <div class="unit-field">
-                                <input type="number" id="loadStart" step="0.01" min="0" value="0">
-                                <span>m</span>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label for="loadEnd">Load end</label>
-                            <div class="unit-field">
-                                <input type="number" id="loadEnd" step="0.01" min="0" value="5">
-                                <span>m</span>
-                            </div>
-                        </div>
+                        <p class="field-hint">Intensity increases from zero at the start to wmax at the end.</p>
                     </div>
-
-                    <p id="validationMessage" class="validation-message" role="status" aria-live="polite">Inputs are ready for calculation.</p>
-
-                    <div class="actions">
-                        <button id="calculateBtn" class="button primary" type="button" aria-describedby="validationMessage supportNote">Calculate</button>
-                        <button id="exampleBtn" class="button secondary" type="button">Load example</button>
-                        <button id="resetBtn" class="button secondary" type="button">Reset</button>
-                    </div>
+                    <p id="validationMessage" class="validation-message" role="status" aria-live="polite"></p>
+                    <button id="resetBtn" class="button secondary reset-button" type="button">Reset setup</button>
                 </section>
+                <p class="workspace-note">Simply supported beams · Vertical loads<br>Units: metres and kilonewtons</p>
             </aside>
-
-            <section class="analysis-panel" aria-label="Beam analysis workspace">
-                <div class="canvas-card">
-                    <div class="canvas-header">
-                        <div>
-                            <p class="eyeline">Beam Diagram</p>
-                            <h2>Free-body diagram</h2>
-                        </div>
-                        <div class="status-pill" id="diagramStatus" role="status" aria-live="polite">Preview</div>
-                    </div>
-
+            <section class="analysis-panel" aria-label="Beam analysis">
+                <section class="canvas-card" aria-labelledby="canvasTitle">
+                    <div class="canvas-header"><div><h2 id="canvasTitle">Free-body diagram</h2><p id="diagramSubtitle">Point load · Simply supported beam</p></div><span class="status-pill" id="diagramStatus">Live result</span></div>
                     <div class="diagram-frame">
-                        <svg id="beamDiagram" viewBox="0 0 900 360" role="img" aria-labelledby="diagramTitle diagramDesc">
-                            <title id="diagramTitle">Beam free-body diagram</title>
-                            <desc id="diagramDesc">Preview of a simply supported beam with a point load example.</desc>
+                        <svg id="beamDiagram" viewBox="0 0 900 430" role="img" aria-labelledby="diagramTitle diagramDesc">
+                            <title id="diagramTitle">Beam free-body diagram</title><desc id="diagramDesc">A simply supported beam under a point load.</desc>
                             <defs>
-                                <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                                    <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--line-soft)" stroke-width="0.7"/>
-                                </pattern>
-                                <marker id="arrow-down" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
-                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--load)"/>
-                                </marker>
-                                <marker id="arrow-up" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
-                                    <path d="M 0 5 L 10 0 L 10 10 z" fill="var(--reaction)"/>
-                                </marker>
+                                <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--line-soft)" stroke-width="0.7"/></pattern>
+                                <marker id="arrow-down" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8 Z" fill="var(--load)"/></marker>
+                                <marker id="arrow-up" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M 0 0 L 8 4 L 0 8 Z" fill="var(--reaction)"/></marker>
                             </defs>
-                            <rect width="900" height="360" fill="url(#grid)"/>
-                            <line x1="90" y1="220" x2="810" y2="220" stroke="var(--beam)" stroke-width="14" stroke-linecap="square"/>
-                            <line x1="90" y1="210" x2="810" y2="210" stroke="var(--beam-highlight)" stroke-width="2"/>
-                            <g id="supports"></g>
-                            <g id="loads"></g>
-                            <g id="dimensions"></g>
+                            <rect width="900" height="430" fill="var(--surface-muted)"/><rect width="900" height="430" fill="url(#grid)"/>
+                            <line x1="110" y1="220" x2="790" y2="220" stroke="var(--beam)" stroke-width="12"/>
+                            <g id="supports"></g><g id="loads"></g><g id="dimensions"></g>
                         </svg>
+                        <button id="loadHandle" class="load-handle" type="button" aria-label="Move point load. Use arrow keys, Home or End." aria-describedby="interactionHint"><span aria-hidden="true">↔</span></button>
                     </div>
-                </div>
-
-                <div class="insight-grid">
-                    <section class="result-card">
-                        <div class="card-title">
-                            <p class="eyeline">Result</p>
-                            <h2>Support reactions</h2>
+                    <div class="mobile-position"><label for="pointPositionSlider">Move point load <span id="sliderPosition"></span></label><input id="pointPositionSlider" type="range" min="0" max="5" step="0.05" value="2.5" aria-describedby="interactionHint"></div>
+                    <div class="diagram-footer"><p id="interactionHint">Drag the handle to move the load, or use the position field.</p><div class="legend"><span class="legend-load">Applied load</span><span class="legend-reaction">Reaction</span></div></div>
+                    <div class="example-strip" aria-label="Example load cases"><span>Try an example</span><div class="example-buttons"><button type="button" data-example="center" aria-pressed="true">Centre load</button><button type="button" data-example="near">Near support A</button><button type="button" data-example="uniform">Uniform load</button><button type="button" data-example="triangular">Triangular load</button></div></div>
+                </section>
+                <section class="result-card" aria-labelledby="resultTitle">
+                    <div class="card-title"><h2 id="resultTitle">Support reactions</h2><span id="balanceNote" class="balance-note">Equilibrium satisfied</span></div>
+                    <div id="results"><p class="placeholder hidden">Enter valid inputs to see support reactions.</p><div id="calculationResult">
+                        <div class="result-grid">
+                            <div class="result-item"><span class="label">Support A · RA</span><span class="value" id="reactionA">5.00 kN</span><span class="result-direction">↑ Upward reaction</span></div>
+                            <div class="result-item"><span class="label">Support B · RB</span><span class="value" id="reactionB">5.00 kN</span><span class="result-direction">↑ Upward reaction</span></div>
                         </div>
-                        <div id="results" class="results-content" aria-live="polite">
-                            <div class="placeholder">
-                                <span class="placeholder-mark">RA</span>
-                                <p>Example values are loaded. Press Calculate to solve RA and RB.</p>
-                            </div>
-                            <div id="calculationResult" class="hidden">
-                                <div class="result-grid">
-                                    <div class="result-item">
-                                        <span class="label">Reaction A</span>
-                                        <span class="value" id="reactionA">0.00 kN</span>
-                                    </div>
-                                    <div class="result-item">
-                                        <span class="label">Reaction B</span>
-                                        <span class="value" id="reactionB">0.00 kN</span>
-                                    </div>
-                                </div>
-                                <div class="result-meta">
-                                    <span id="totalLoad">Total load: -</span>
-                                    <span id="centroidLocation">Resultant at: -</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="theory-card">
-                        <div class="card-title">
-                            <p class="eyeline">Calculation Notes</p>
-                            <h2>Equilibrium equations</h2>
-                        </div>
-                        <div class="equation-list">
-                            <p><strong>Sum Fy = 0</strong><span>RA + RB = Total Load</span></p>
-                            <p><strong>Sum MA = 0</strong><span>RB * L = Resultant Load * x_bar</span></p>
-                            <p><strong>Notation</strong><span>P = point load, w = distributed load, x_bar = resultant location from A.</span></p>
-                            <p><strong>Solver limit</strong><span>Calculation supports one pin and one roller. Fixed supports are visual-only in this version.</span></p>
-                        </div>
-                    </section>
-                </div>
+                        <div class="result-meta"><span id="totalLoad"></span><span id="centroidLocation"></span></div>
+                    </div></div>
+                    <p id="resultAnnouncement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+                    <details class="calculation-details"><summary>View calculation steps <span>Equilibrium equations</span></summary><div id="calculationSteps" class="equation-list"></div><p class="field-hint">Displayed values are rounded. Results use full precision. Triangular loads increase from left to right. Fixed supports are preview-only.</p></details>
+                </section>
             </section>
         </main>
-
-        <footer class="footer">
-            <p>Created by <strong>Chanatip Tonngern</strong> for civil engineering and front-end practice.</p>
-        </footer>
+        <footer class="footer"><p>Built by <strong>Chanatip Tonngern</strong></p><p>For learning and exploration. Not for structural design verification.</p></footer>
     </div>
-
-    <script src="type.js"></script>
+    <div id="actionMessage" class="action-message" role="status" aria-live="polite"></div>
+    <noscript><p class="noscript-note">Enable JavaScript to calculate reactions and interact with the beam diagram.</p></noscript>
 </body>
 </html>

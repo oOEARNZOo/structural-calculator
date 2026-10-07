@@ -1,0 +1,14 @@
+{
+  "name": "structural-calculator",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node tests/solver.test.cjs"
+  },
+  "devDependencies": {
+    "vite": "^8.3.3"
+  }
+}
