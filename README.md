@@ -26,7 +26,7 @@ structural-calculator/
 |-- index.html
 |-- style.css
 |-- solver.js            # pure validation and analysis
-|-- type.js              # UI state, SVG rendering, save/export
+|-- main.js              # UI state, SVG rendering, save/export
 |-- favicon.svg
 |-- package.json         # Vite dev server and test scripts
 |-- scripts/preview.cjs  # optional zero-dependency static server
@@ -66,7 +66,7 @@ Save setup stores only beam parameters in this browser's local storage. Reset se
 
 ## Code and verification
 
-`solver.js` contains pure validation and analysis functions. `type.js` handles interface state, persistence, export and SVG rendering. The runtime code has no dependencies; Vite is a development-only tool.
+`solver.js` contains pure validation and analysis functions. `main.js` handles interface state, persistence, export and SVG rendering. The runtime code has no dependencies; Vite is a development-only tool.
 
 ```text
 npm test

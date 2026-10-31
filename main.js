@@ -3,6 +3,8 @@ import * as BeamAnalysis from "./solver.js";
 
 const STORAGE_KEY = "structural-calculator.setup.v2";
 const KN_PER_KIP = 4.4482216, M_PER_FT = 0.3048;
+/* Beam extent in SVG user units, shared by all three diagrams. */
+const LEFT = 60, WIDTH = 880, RIGHT = LEFT + WIDTH;
 /* Display factor per quantity: SI value ÷ factor = displayed value. */
 const UNIT_SETS = {
     si: { length: 1, force: 1, line: 1, moment: 1, labels: { length: "m", force: "kN", line: "kN/m", moment: "kN·m" } },
@@ -17,7 +19,6 @@ const PRESETS = {
 
 class StructuralCalculator {
     constructor() {
-        this.left = 60; this.width = 880;
         this.units = "si";
         this.supportA = "pin";
         this.supportB = "roller";
@@ -154,17 +155,29 @@ class StructuralCalculator {
     }
 
     refresh() {
-        const m = this.model();
-        const check = BeamAnalysis.validateLoads(m);
-        this.check = check;
-        this.result = BeamAnalysis.analyze(m);
-        const supports = BeamAnalysis.validateSupports(this.supportA, this.supportB);
-        this.supports = supports;
+        const model = this.model();
+        this.check = BeamAnalysis.validateLoads(model);
+        this.supports = BeamAnalysis.validateSupports(this.supportA, this.supportB);
+        this.result = BeamAnalysis.analyze(model);
+        this.syncSupports();
+        this.syncValidation();
+        this.syncToggles();
+        this.syncProbe();
+        this.drawResults();
+        this.announceResult();
+    }
+
+    syncSupports() {
         this.supportFields.A.value = this.supportA;
         this.supportFields.B.value = this.supportB;
         const note = document.getElementById("supportNote");
-        note.textContent = supports.message;
-        note.classList.toggle("warning", !supports.supported);
+        note.textContent = this.supports.message;
+        note.classList.toggle("warning", !this.supports.supported);
+    }
+
+    /* Field-level errors, load count and empty state. */
+    syncValidation() {
+        const { check } = this;
         document.getElementById("loadCount").textContent = `(${this.loads.length})`;
         document.getElementById("noLoads").classList.toggle("hidden", this.loads.length > 0);
         this.lengthField.setAttribute("aria-invalid", String(Boolean(check.lengthError)));
@@ -177,24 +190,38 @@ class StructuralCalculator {
                 document.getElementById(`${key}-${load.id}-error`).textContent = check.errors[i][key] || "";
             }
         });
+    }
+
+    /* Pressed states, unit labels and result-dependent buttons. */
+    syncToggles() {
+        const { labels } = this.u;
         document.querySelectorAll("[data-preset]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.preset === this.preset)));
         document.querySelectorAll("[data-units]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.units === this.units)));
-        document.querySelectorAll(".forceUnit").forEach(el => { el.textContent = this.u.labels.force; });
-        document.querySelectorAll(".momentUnit").forEach(el => { el.textContent = this.u.labels.moment; });
-        document.getElementById("lengthUnit").textContent = this.u.labels.length;
+        document.querySelectorAll(".forceUnit").forEach(el => { el.textContent = labels.force; });
+        document.querySelectorAll(".momentUnit").forEach(el => { el.textContent = labels.moment; });
+        document.getElementById("lengthUnit").textContent = labels.length;
         document.getElementById("exportBtn").disabled = !this.result;
         document.getElementById("saveBtn").disabled = !this.result;
+    }
+
+    /* Keep the probe slider and position inside the beam. */
+    syncProbe() {
         const validL = Number.isFinite(this.L) && this.L > 0;
-        this.probeField.max = validL ? this.L : 1;
+        const max = validL ? this.L : 1;
+        this.probeField.max = max;
         this.probeField.step = validL ? this.L / 600 : 0.01;
         this.probeField.disabled = !this.result;
-        this.probe = Math.min(Math.max(Number.isFinite(this.probe) ? this.probe : 0, 0), validL ? this.L : 1);
+        this.probe = Math.min(Math.max(Number.isFinite(this.probe) ? this.probe : 0, 0), max);
         this.probeField.value = this.probe;
-        this.drawResults();
+    }
+
+    /* Debounced so screen readers hear the final value, not every keystroke. */
+    announceResult() {
         clearTimeout(this.announcementTimer);
         this.announcementTimer = setTimeout(() => {
-            document.getElementById("resultAnnouncement").textContent = this.result
-                ? `Reaction A: ${this.fmt(this.result.reactionA, "force")} ${this.u.labels.force}. Reaction B: ${this.fmt(this.result.reactionB, "force")} ${this.u.labels.force}.`
+            const r = this.result, unit = this.u.labels.force;
+            document.getElementById("resultAnnouncement").textContent = r
+                ? `Reaction A: ${this.fmt(r.reactionA, "force")} ${unit}. Reaction B: ${this.fmt(r.reactionB, "force")} ${unit}.`
                 : "Reactions unavailable. Check the beam settings.";
         }, 500);
     }
@@ -229,13 +256,13 @@ class StructuralCalculator {
         document.getElementById("maxMoment").textContent = f(r.peakMoment, "moment");
         document.getElementById("maxMomentNote").textContent = `at x = ${f(r.peakMomentX, "length")} ${lu.length} · governs design`;
         this.drawFbd(r);
-        this.drawShear(r);
-        this.drawMoment(r);
-        this.drawProbe(r);
+        const sy = this.drawShear(r);
+        const my = this.drawMoment(r);
+        this.drawProbe(r, sy, my);
         this.drawSteps(r);
     }
 
-    X(x) { return this.left + x / this.L * this.width; }
+    X(x) { return LEFT + x / this.L * WIDTH; }
     clip(px) { return px < 140 ? "start" : px > 860 ? "end" : "middle"; }
     head(x, tip, size) { return `${x - size},${tip - size * 1.6} ${x + size},${tip - size * 1.6} ${x},${tip}`; }
 
@@ -253,14 +280,14 @@ class StructuralCalculator {
                 svg.append(this.line("", x, 66, x, 104, "var(--load)", 1.6), this.el("polygon", { points: this.head(x, 111, 5), fill: "var(--load)" }));
             }
         }
-        svg.append(this.el("rect", { x: 60, y: 112, width: 880, height: 9, rx: 1.5, fill: "var(--beam)" }));
+        svg.append(this.el("rect", { x: LEFT, y: 112, width: WIDTH, height: 9, rx: 1.5, fill: "var(--beam)" }));
         for (const load of loads.filter(l => l.type === "P")) {
             const x = X(load.a);
             svg.append(this.line("", x, 34, x, 100, "var(--load)", 3), this.el("polygon", { points: this.head(x, 111, 7), fill: "var(--load)" }), this.text(x, 24, `P = ${f(load.mag, "force")} ${lu.force}`, "svg-load", this.clip(x)));
         }
-        svg.append(this.support(this.supportA, 60, "A"), this.support(this.supportB, 940, "B"));
-        if (r && r.fixedEnd && Math.abs(r.fixedMoment) > 1e-9) svg.append(this.momentArc(r.fixedEnd === "A" ? 60 : 940, r.fixedEnd === "A", (r.fixedEnd === "A") === r.fixedMoment >= 0));
-        for (const [x, label, value, anchor, tx] of r ? [[60, "RA", r.reactionA, "start", 74], [940, "RB", r.reactionB, "end", 926]].filter(([, label]) => (label === "RA" ? this.supportA : this.supportB) !== "free") : []) {
+        svg.append(this.support(this.supportA, LEFT, "A"), this.support(this.supportB, RIGHT, "B"));
+        if (r && r.fixedEnd && Math.abs(r.fixedMoment) > 1e-9) svg.append(this.momentArc(r.fixedEnd === "A" ? LEFT : RIGHT, r.fixedEnd === "A", (r.fixedEnd === "A") === r.fixedMoment >= 0));
+        for (const [x, label, value, anchor, tx] of r ? [[LEFT, "RA", r.reactionA, "start", LEFT + 14], [RIGHT, "RB", r.reactionB, "end", RIGHT - 14]].filter(([, label]) => (label === "RA" ? this.supportA : this.supportB) !== "free") : []) {
             const up = value >= 0;
             svg.append(this.line("", x, 222, x, up ? 172 : 212, "var(--reaction)", 3), this.el("polygon", { points: up ? `${x},162 ${x - 7},175 ${x + 7},175` : `${x},222 ${x - 7},209 ${x + 7},209`, fill: "var(--reaction)" }), this.text(tx, 206, `${label} = ${f(value, "force")} ${lu.force}${r.fixedEnd === label[1] ? ` · M = ${f(r.fixedMoment, "moment")} ${lu.moment}` : ""}`, "svg-reaction", anchor));
         }
@@ -303,37 +330,37 @@ class StructuralCalculator {
 
     drawShear(r) {
         const svg = this.svgs.sfd, base = 95, scale = r.maxShear > 0 ? 72 / r.maxShear : 0, y = v => base - v * scale;
-        let line = `M60 ${base}`;
+        let line = `M${LEFT} ${base}`;
         r.xs.forEach((x, i) => { line += ` L${this.X(x).toFixed(1)} ${y(r.vs[i]).toFixed(1)}`; });
-        line += ` L940 ${base}`;
+        line += ` L${RIGHT} ${base}`;
         const topX = this.X(r.topShearX), botX = this.X(r.botShearX);
-        svg.append(this.line("", 60, base, 940, base, "var(--baseline)", 1), this.el("path", { d: `${line} Z`, fill: "var(--shear)", opacity: 0.14 }), this.el("path", { d: line, fill: "none", stroke: "var(--shear)", "stroke-width": 2.5, "stroke-linejoin": "round" }),
+        svg.append(this.line("", LEFT, base, RIGHT, base, "var(--baseline)", 1), this.el("path", { d: `${line} Z`, fill: "var(--shear)", opacity: 0.14 }), this.el("path", { d: line, fill: "none", stroke: "var(--shear)", "stroke-width": 2.5, "stroke-linejoin": "round" }),
             this.text(topX, y(r.topShear) - 10, `${r.topShear >= 0 ? "+" : ""}${this.fmt(r.topShear, "force")}`, "svg-shear", this.clip(topX)), this.text(botX, y(r.botShear) + 22, this.fmt(r.botShear, "force"), "svg-shear", this.clip(botX)),
             this.line("", this.X(this.probe), 0, this.X(this.probe), 190, "var(--ink)", 1, "4 4", 0.35));
-        this.sy = y;
+        return y;
     }
 
     drawMoment(r) {
         const svg = this.svgs.bmd, hasNeg = r.minMoment < -1e-6, base = hasNeg ? 95 : 165;
         const abs = Math.max(Math.abs(r.maxMoment), Math.abs(r.minMoment)), scale = abs > 0 ? (hasNeg ? 70 : 130) / abs : 0, y = m => base - m * scale;
-        let line = `M60 ${base}`;
+        let line = `M${LEFT} ${base}`;
         r.xs.forEach((x, i) => { line += ` L${this.X(x).toFixed(1)} ${y(r.ms[i]).toFixed(1)}`; });
-        line += ` L940 ${base}`;
-        svg.append(this.line("", 60, base, 940, base, "var(--baseline)", 1), this.el("path", { d: `${line} Z`, fill: "var(--moment)", opacity: 0.14 }), this.el("path", { d: line, fill: "none", stroke: "var(--moment)", "stroke-width": 2.5, "stroke-linejoin": "round" }),
+        line += ` L${RIGHT} ${base}`;
+        svg.append(this.line("", LEFT, base, RIGHT, base, "var(--baseline)", 1), this.el("path", { d: `${line} Z`, fill: "var(--moment)", opacity: 0.14 }), this.el("path", { d: line, fill: "none", stroke: "var(--moment)", "stroke-width": 2.5, "stroke-linejoin": "round" }),
             this.text(this.X(r.peakMomentX), y(r.peakMoment) + (r.peakMoment < 0 ? 22 : -10), this.fmt(r.peakMoment, "moment"), "svg-moment", this.clip(this.X(r.peakMomentX))),
             this.line("", this.X(this.probe), 0, this.X(this.probe), 180, "var(--ink)", 1, "4 4", 0.35));
-        this.my = y;
         const L = this.L, step = L <= 6 ? 1 : L <= 15 ? 2 : 5, ticks = [];
         for (let t = 0; t <= L + 1e-9; t += step) ticks.push(t);
         if (Math.abs(ticks[ticks.length - 1] - L) > 1e-6) ticks.push(L);
-        svg.append(this.line("", 60, 186, 940, 186, "var(--muted)", 1));
+        svg.append(this.line("", LEFT, 186, RIGHT, 186, "var(--muted)", 1));
         for (const t of ticks) svg.append(this.line("", this.X(t), 186, this.X(t), 192, "var(--muted)", 1), this.text(this.X(t), 206, String(Math.round(t / this.u.length * 100) / 100), "svg-tick", "middle"));
+        return y;
     }
 
-    drawProbe(r) {
+    drawProbe(r, sy, my) {
         const x = this.probe, v = r.shear(x), m = r.bending(x), px = this.X(x);
-        this.svgs.sfd.append(this.el("circle", { cx: px, cy: this.sy(v), r: 5, fill: "var(--surface)", stroke: "var(--shear)", "stroke-width": 2.5 }));
-        this.svgs.bmd.append(this.el("circle", { cx: px, cy: this.my(m), r: 5, fill: "var(--surface)", stroke: "var(--moment)", "stroke-width": 2.5 }));
+        this.svgs.sfd.append(this.el("circle", { cx: px, cy: sy(v), r: 5, fill: "var(--surface)", stroke: "var(--shear)", "stroke-width": 2.5 }));
+        this.svgs.bmd.append(this.el("circle", { cx: px, cy: my(m), r: 5, fill: "var(--surface)", stroke: "var(--moment)", "stroke-width": 2.5 }));
         this.svgs.fbd.querySelector("#probeLine")?.setAttribute("x1", px);
         const lu = this.u.labels;
         document.getElementById("probeX").textContent = `x = ${this.fmt(x, "length")} ${lu.length}`;

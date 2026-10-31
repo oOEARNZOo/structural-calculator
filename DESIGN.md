@@ -26,4 +26,4 @@ Use the existing Segoe UI / Noto Sans Thai / system sans stack, fixed rem typogr
 - Saving and exporting are available for valid solved models. Local storage failures show a message without disrupting analysis.
 - Exported SVGs contain resolved presentation attributes and local fragment references, so they work outside the page.
 
-The project uses plain HTML, CSS and JavaScript. Keep engineering validation and calculations in solver.js; UI and drawing belong in type.js.
+The project uses plain HTML, CSS and JavaScript. Keep engineering validation and calculations in solver.js; UI and drawing belong in main.js.
