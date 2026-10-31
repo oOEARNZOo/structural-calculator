@@ -1,4 +1,6 @@
 /* UI state and SVG rendering. Engineering calculations live in solver.js. */
+import * as BeamAnalysis from "./solver.js";
+
 const STORAGE_KEY = "structural-calculator.setup.v2";
 const KN_PER_KIP = 4.4482216, M_PER_FT = 0.3048;
 /* Display factor per quantity: SI value ÷ factor = displayed value. */

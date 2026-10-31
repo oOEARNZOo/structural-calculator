@@ -30,7 +30,7 @@ structural-calculator/
 |-- favicon.svg
 |-- package.json         # Vite dev server and test scripts
 |-- scripts/preview.cjs  # optional zero-dependency static server
-|-- tests/solver.test.cjs
+|-- tests/solver.test.mjs
 |-- DESIGN.md
 `-- README.md
 ```
@@ -57,7 +57,6 @@ Other options:
 | `npm test` | Run the solver tests |
 | `npm run build` / `npm run preview` | See the note below |
 
-**Build note:** `solver.js` and `type.js` are loaded as classic `<script defer>` files, not ES modules, so `npm run build` does not bundle them into `dist`. Convert them to modules before deploying a Vite build.
 
 ## Interaction
 

@@ -1,6 +1,6 @@
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const { solve, validate } = require('../solver.js');
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { solve, validate } from '../solver.js';
 const base = { beamLength: 5, supportA: 'pin', supportB: 'roller', loadType: 'point', pointLoad: 10, pointDistance: 2.5, uniformLoad: 4, maxLoad: 6, loadStart: 0, loadEnd: 5 };
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-10, `${actual} ≠ ${expected}`);
 test('point load: centre, asymmetric and both support endpoints', () => {
@@ -32,7 +32,7 @@ test('invalid geometry, non-finite values and unsupported supports never produce
     }
     assert.equal(solve({ ...base, loadType: 'uniform', uniformLoad: Number.MAX_VALUE }), null);
 });
-const { analyze, validateLoads } = require('../solver.js');
+import { analyze, validateLoads, validateSupports } from '../solver.js';
 test('multi-load analysis matches hand calculation and equilibrium', () => {
     const r = analyze({ beamLength: 6, loads: [{ type: 'P', mag: 12, a: 2 }, { type: 'w', mag: 4, a: 3, b: 6 }] });
     near(r.total, 24); near(r.moment, 12 * 2 + 12 * 4.5); near(r.reactionB, 13); near(r.reactionA, 11);
@@ -47,7 +47,6 @@ test('multi-load validation rejects off-beam, empty and reversed loads', () => {
     assert.equal(analyze({ beamLength: 6, loads: [] }).reactionA, 0);
 });
 test('support pairs: pin/roller in either order solve, others are preview-only', () => {
-    const { validateSupports } = require('../solver.js');
     const m = { beamLength: 6, loads: [{ type: 'P', mag: 12, a: 2 }] };
     const r = analyze({ ...m, supportA: 'pin', supportB: 'roller' });
     near(analyze({ ...m, supportA: 'roller', supportB: 'pin' }).reactionA, r.reactionA);
